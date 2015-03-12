@@ -29,8 +29,7 @@ probes: $(DIRS) $(clean_data_dir)/mappable_regions.bed.gz
 	    --flank_length=$(flank_length)
 	gzip $(output_dir)/whole_genome_$(tiling_step)bp_tiling.bed
 	for i in $(chromosomes); do \
-	    zcat $(output_dir)/whole_genome_$(tiling_step)bp_tiling.bed.gz | \
-	    grep -w ^chr$${i} | \
+	    zgrep -w ^chr$${i} $(output_dir)/whole_genome_$(tiling_step)bp_tiling.bed.gz | \
 	    gzip > $(output_dir)/chr$${i}_$(tiling_step)bp_tiling.bed.gz; \
 	done
 
