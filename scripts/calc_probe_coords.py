@@ -7,7 +7,14 @@ def tile_probes(start, end, probe_length, tiling_step, flank_length):
     """ Calculate coordinates of all probes overlapping a given region and
     return the whole thing as a list of pairs (probe_start, probe_end).
     """
+    # the first probe overlapping a given region extends 'flank_length' bases
+    # upstream from the start of that region...
     probe_start = start - flank_length
+    # ...however, in case the region starts less than 'flank_length' bases
+    # from the beginning of a chromosome, set the start of the first probe to 0
+    if probe_start < 0:
+        probe_start = 0
+
     probe_end = probe_start + probe_length
 
     probes = []
