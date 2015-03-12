@@ -23,11 +23,13 @@ all: probes figures
 probes: $(DIRS) $(clean_data_dir)/mappable_regions.bed.gz
 	python3 $(scripts_dir)/calc_probe_coords.py \
 	    --in_file=$(clean_data_dir)/mappable_regions.bed.gz \
-	    --out_file=$(output_dir)/whole_genome_$(tiling_step)bp_tiling.bed \
+	    --out_file=$(output_dir)/whole_genome_$(tiling_step)bp_tiling.bed_tmp \
 	    --probe_length=$(probe_length) \
 	    --tiling_step=$(tiling_step) \
 	    --flank_length=$(flank_length)
-	gzip $(output_dir)/whole_genome_$(tiling_step)bp_tiling.bed
+	sort -k1,1V -k2,2n $(output_dir)/whole_genome_$(tiling_step)bp_tiling.bed_tmp | \
+	    gzip > $(output_dir)/whole_genome_$(tiling_step)bp_tiling.bed.gz
+	rm $(output_dir)/whole_genome_$(tiling_step)bp_tiling.bed_tmp
 	for i in $(chromosomes); do \
 	    zgrep -w ^chr$${i} $(output_dir)/whole_genome_$(tiling_step)bp_tiling.bed.gz | \
 	    gzip > $(output_dir)/chr$${i}_$(tiling_step)bp_tiling.bed.gz; \
