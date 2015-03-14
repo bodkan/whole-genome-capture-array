@@ -35,6 +35,9 @@ probes: $(DIRS) $(clean_data_dir)/mappable_regions.bed.gz
 	    gzip > $(output_dir)/chr$${i}_$(tiling_step)bp_tiling.bed.gz; \
 	done
 
+gap_analysis: $(clean_data_dir)/mappable_regions.bed.gz
+	Rscript scripts/analyze_gaps.R > $(output_dir)/gap_analysis.txt
+
 figures: $(DIRS) $(summary_file)
 	Rscript $(scripts_dir)/plot_probes_summary.R $(summary_file) $(summary_fig)
 
