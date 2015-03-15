@@ -12,13 +12,13 @@ get_gaps <- function(gr) {
     starts - ends - 1
 }
 
-chromosomes <- c(paste0("chr", 1:22), "chrX", "chrY")
+chromosomes <- c(as.character(1:22), "X", "Y")
 
 ########################################################################
 # load regions that passed Heng Li's alignability filter
 # (bases where all overlapping 35mers do not match to any other position
 # in the genome allowing for up to one mismatch)
-map_filter <- import.bed("raw_data/hs37m_filt35_99_with_chr.bed.gz", genome = "hg19")
+map_filter <- import.bed("raw_data/hs37m_filt35_99.bed.gz")
 seqlevels(map_filter, force = TRUE) <- chromosomes
 
 # split the loaded GRanges object into GRangesList -- regions per chromosomes
@@ -38,12 +38,12 @@ min_gap
 # chr21 and chr22 contain gaps lower than 35 -> what is the distribution
 # gap lengths?
 cat("Distribution of gap lengths on chr21\n")
-chr21_gaps <- get_gaps(map_filter[["chr21"]]) %>% table %>% head(n=25) 
+chr21_gaps <- get_gaps(map_filter[["21"]]) %>% table %>% head(n=25) 
 chr21_gaps
 chr21_gaps %>% txtplot(xlab = "gap length", ylab = "count", width = 80)
 
 cat("Distribution of gap lengths on chr22\n")
-chr22_gaps <- get_gaps(map_filter[["chr22"]]) %>% table %>% head(n=25)  
+chr22_gaps <- get_gaps(map_filter[["22"]]) %>% table %>% head(n=25)  
 chr22_gaps
 chr22_gaps %>% txtplot(xlab = "gap length", ylab = "count", width = 80)
 
@@ -51,7 +51,7 @@ chr22_gaps %>% txtplot(xlab = "gap length", ylab = "count", width = 80)
 ########################################################################
 # load regions that passed Heng Li's alignability filter and which have
 # not been found by a Tandem Repeat Finder
-no_trf_map_filter <- import.bed("clean_data/mappable_regions.bed.gz", genome = "hg19")
+no_trf_map_filter <- import.bed("clean_data/mappable_regions.bed.gz")
 
 # split the loaded GRanges object into GRangesList -- regions per chromosomes
 seqlevels(no_trf_map_filter, force = TRUE) <- chromosomes
@@ -69,17 +69,17 @@ no_trf_min_gap
 
 # what is the distribution of gap lengths after removing TRF regions?
 cat("Distribution of gap lengths on chr21 (after TRF filtering)\n")
-no_trf_chr21_gaps <- get_gaps(no_trf_map_filter[["chr21"]]) %>% table %>% head(n=25) 
+no_trf_chr21_gaps <- get_gaps(no_trf_map_filter[["21"]]) %>% table %>% head(n=25) 
 no_trf_chr21_gaps 
 no_trf_chr21_gaps %>% txtplot(xlab = "gap length", ylab = "count", width = 80)
 
 cat("Distribution of gap lengths on chr22 (after TRF filtering)\n")
-no_trf_chr22_gaps <- get_gaps(no_trf_map_filter[["chr22"]]) %>% table %>% head(n=25)  
+no_trf_chr22_gaps <- get_gaps(no_trf_map_filter[["22"]]) %>% table %>% head(n=25)  
 no_trf_chr22_gaps
 no_trf_chr22_gaps %>% txtplot(xlab = "gap length", ylab = "count", width = 80)
 
 cat("Distribution of gap lengths on chr1 (after TRF filtering)\n")
-no_trf_chr1_gaps <- get_gaps(no_trf_map_filter[["chr1"]]) %>% table %>% head(n=25) 
+no_trf_chr1_gaps <- get_gaps(no_trf_map_filter[["1"]]) %>% table %>% head(n=25) 
 no_trf_chr1_gaps 
 no_trf_chr1_gaps %>% txtplot(xlab = "gap length", ylab = "count", width = 80)
 
@@ -93,20 +93,20 @@ no_trf_chr1_gaps %>% txtplot(xlab = "gap length", ylab = "count", width = 80)
 # gaps of _exactly_ 25bp. Let's test this...
 
 # load TRF filter data
-trf <- import.bed("raw_data/simpleRepeat.bed.gz", genome = "hg19")
+trf <- import.bed("raw_data/simpleRepeat.bed.gz")
 
 # find the first unique region on chr1 that is followed by 25bp gap
 # (that is, probably a first half of a larger unique region before
 # removal of TRF blocks)
-i <- which(get_gaps(no_trf_map_filter[["chr1"]]) == 25)[1]
+i <- which(get_gaps(no_trf_map_filter[["1"]]) == 25)[1]
 # start/end coordinate of this region
-s <- start(no_trf_map_filter[["chr1"]][i])
-e <- end(no_trf_map_filter[["chr1"]][i])
+s <- start(no_trf_map_filter[["1"]][i])
+e <- end(no_trf_map_filter[["1"]][i])
 
 cat("Example of a region before subtraction of TRF blocks:\n")
-map_filter[["chr1"]][start(map_filter[["chr1"]]) == s]
+map_filter[["1"]][start(map_filter[["1"]]) == s]
 cat("The same region after subtraction of TRF blocks:\n")
-no_trf_map_filter[["chr1"]][c(i, i+1)]
+no_trf_map_filter[["1"]][c(i, i+1)]
 cat("Corresponding TRF block\n")
 trf[start(trf) == e + 1]
 
