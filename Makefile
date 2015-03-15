@@ -70,6 +70,14 @@ $(raw_data_dir)/simpleRepeat.bed.gz:
 	cut -f2,3,4 | \
 	sed 's/^chr//' | gzip > $@
 
+# download table of chromosome lengths from UCSC
+$(clean_data_dir)/chrom_lengths.txt:
+	curl http://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/chromInfo.txt.gz | \
+	gunzip | \
+	cut -f1,2 | \
+	grep -w "chr[X,Y,0-9]*" | \
+	sort -k1,1V > $@
+
 clean:
 	rm -rf $(DIRS)
 
