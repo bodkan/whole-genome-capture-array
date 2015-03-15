@@ -83,3 +83,33 @@ no_trf_chr1_gaps <- get_gaps(no_trf_map_filter[["chr1"]]) %>% table %>% head(n=2
 no_trf_chr1_gaps 
 no_trf_chr1_gaps %>% txtplot(xlab = "gap length", ylab = "count", width = 80)
 
+
+########################################################################
+# As shown above, the minimum distance between two neighboring Heng Li's
+# unique regions gets reduced from 35bp to 25bp after subtraction of
+# repetitive blocks found by TRF.
+# The only possible reason for this (other than some weird bug in my
+# code) is that some TR regions split unique regions in half, creating
+# gaps of _exactly_ 25bp. Let's test this...
+
+# load TRF filter data
+trf <- import.bed("raw_data/simpleRepeat.bed.gz", genome = "hg19")
+
+# find the first unique region on chr1 that is followed by 25bp gap
+# (that is, probably a first half of a larger unique region before
+# removal of TRF blocks)
+i <- which(get_gaps(no_trf_map_filter[["chr1"]]) == 25)[1]
+# start/end coordinate of this region
+s <- start(no_trf_map_filter[["chr1"]][i])
+e <- end(no_trf_map_filter[["chr1"]][i])
+
+cat("Example of a region before subtraction of TRF blocks:\n")
+map_filter[["chr1"]][start(map_filter[["chr1"]]) == s]
+cat("The same region after subtraction of TRF blocks:\n")
+no_trf_map_filter[["chr1"]][c(i, i+1)]
+cat("Corresponding TRF block\n")
+trf[start(trf) == e + 1]
+
+cat("Why 25bp gaps exactly? are there no shorter TRF blocks?\n")
+trf_counts <- trf %>% width %>% table
+trf_counts %>% head(20)
