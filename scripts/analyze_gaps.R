@@ -1,6 +1,5 @@
 library(magrittr)
 library(dplyr)
-library(txtplot)
 library(rtracklayer)
 
 ########################################################################
@@ -12,6 +11,7 @@ get_gaps <- function(gr) {
     starts - ends - 1
 }
 
+fig_dir <- "figs"
 chromosomes <- c(as.character(1:22), "X", "Y")
 
 ########################################################################
@@ -31,21 +31,35 @@ min_gap <- data.frame(
     row.names = NULL
 )
 # by definition, this has to be always more than 35, is it lower for some
-# chromosome?
-cat("Min gaps between unique regions per chromosome\n")
-min_gap
+# chromosomes?
+png(file.path(fig_dir, "min_gaps_per_chr_before_TRF.png"), width = 1280, height = 800, res = 100)
+barplot(min_gap$min_gap, names.arg = min_gap$chr, border = NA, ylim = c(0, 35),
+        main = "Minimum distance between any two unique regions per chromosome\n(before TRF removal)",
+        xlab = "chromosome", ylab = "minimum distance between any two unique regions [bp]")
+dev.off()
 
 # chr21 and chr22 contain gaps lower than 35 -> what is the distribution
 # gap lengths?
-cat("Distribution of gap lengths on chr21\n")
-chr21_gaps <- get_gaps(map_filter[["21"]]) %>% table %>% head(n=25) 
-chr21_gaps
-chr21_gaps %>% txtplot(xlab = "gap length", ylab = "count", width = 80)
+png(file.path(fig_dir, "gap_lengths_chr21_chr22_before_TRF.png"), width = 1280, height = 800, res = 100)
+par(mfrow = c(2, 1))
 
-cat("Distribution of gap lengths on chr22\n")
-chr22_gaps <- get_gaps(map_filter[["22"]]) %>% table %>% head(n=25)  
-chr22_gaps
-chr22_gaps %>% txtplot(xlab = "gap length", ylab = "count", width = 80)
+# distribution of gap lengths on chr21
+chr21_gaps <- get_gaps(map_filter[["21"]]) %>% table
+chr21_gaps <- as.data.frame(chr21_gaps) %>% head(25)
+names(chr21_gaps) <- c("gap_length", "count")
+barplot(chr21_gaps$count, names.arg = chr21_gaps$gap_length, border = NA,
+        main = "Distribution of distances between any two unique regions for chromosome 21 (before TRF removal)",
+        xlab = "distance between two unique regions [bp]", ylab = "count")
+
+# distribution of gap lengths on chr22
+chr22_gaps <- get_gaps(map_filter[["22"]]) %>% table
+chr22_gaps <- as.data.frame(chr22_gaps) %>% head(25)
+names(chr22_gaps) <- c("gap_length", "count")
+barplot(chr22_gaps$count, names.arg = chr22_gaps$gap_length, border = NA,
+        main = "Distribution of distances between any two unique regions for chromosome 22 (before TRF removal)",
+        xlab = "distance between two unique regions [bp]", ylab = "count")
+
+dev.off()
 
 
 ########################################################################
@@ -64,25 +78,34 @@ no_trf_min_gap <- data.frame(
     min_gap = sapply(no_trf_map_filter, function(chr) chr %>% get_gaps %>% min),
     row.names = NULL
 )
-cat("Min gaps between unique regions per chromosome (after TRF filtering)\n")
-no_trf_min_gap
+# min gaps between unique regions per chromosome (after TRF filtering)
+png(file.path(fig_dir, "min_gaps_per_chr_after_TRF.png"), width = 1280, height = 800, res = 100)
+barplot(no_trf_min_gap$min_gap, names.arg = no_trf_min_gap$chr, border = NA, ylim = c(0, 35),
+        main = "Minimum distance between any two unique regions per chromosome\n(after TRF removal)",
+        xlab = "chromosome", ylab = "minimum distance between any two unique regions [bp]")
+dev.off()
 
 # what is the distribution of gap lengths after removing TRF regions?
-cat("Distribution of gap lengths on chr21 (after TRF filtering)\n")
-no_trf_chr21_gaps <- get_gaps(no_trf_map_filter[["21"]]) %>% table %>% head(n=25) 
-no_trf_chr21_gaps 
-no_trf_chr21_gaps %>% txtplot(xlab = "gap length", ylab = "count", width = 80)
+png(file.path(fig_dir, "gap_lengths_chr21_chr22_after_TRF.png"), width = 1280, height = 800, res = 100)
+par(mfrow = c(2, 1))
 
-cat("Distribution of gap lengths on chr22 (after TRF filtering)\n")
-no_trf_chr22_gaps <- get_gaps(no_trf_map_filter[["22"]]) %>% table %>% head(n=25)  
-no_trf_chr22_gaps
-no_trf_chr22_gaps %>% txtplot(xlab = "gap length", ylab = "count", width = 80)
+# distribution of gap lengths on chr21 (after TRF filtering)
+no_trf_chr21_gaps <- get_gaps(no_trf_map_filter[["21"]]) %>% table
+no_trf_chr21_gaps <- as.data.frame(no_trf_chr21_gaps) %>% head(25)
+names(no_trf_chr21_gaps) <- c("gap_length", "count")
+barplot(no_trf_chr21_gaps$count, names.arg = no_trf_chr21_gaps$gap_length, border = NA,
+        main = "Distribution of distances between any two unique regions for chromosome 21 (after TRF removal)",
+        xlab = "distance between two unique regions [bp]", ylab = "count")
 
-cat("Distribution of gap lengths on chr1 (after TRF filtering)\n")
-no_trf_chr1_gaps <- get_gaps(no_trf_map_filter[["1"]]) %>% table %>% head(n=25) 
-no_trf_chr1_gaps 
-no_trf_chr1_gaps %>% txtplot(xlab = "gap length", ylab = "count", width = 80)
+# distribution of gap lengths on chr22 (after TRF filtering)
+no_trf_chr22_gaps <- get_gaps(no_trf_map_filter[["22"]]) %>% table
+no_trf_chr22_gaps <- as.data.frame(no_trf_chr22_gaps) %>% head(25)
+names(no_trf_chr22_gaps) <- c("gap_length", "count")
+barplot(no_trf_chr22_gaps$count, names.arg = no_trf_chr22_gaps$gap_length, border = NA,
+        main = "Distribution of distances between any two unique regions for chromosome 22 (after TRF removal)",
+        xlab = "distance between two unique regions [bp]", ylab = "count")
 
+dev.off()
 
 ########################################################################
 # As shown above, the minimum distance between two neighboring Heng Li's
@@ -110,6 +133,23 @@ no_trf_map_filter[["1"]][c(i, i+1)]
 cat("Corresponding TRF block\n")
 trf[start(trf) == e + 1]
 
-cat("Why 25bp gaps exactly? are there no shorter TRF blocks?\n")
-trf_counts <- trf %>% width %>% table
-trf_counts %>% head(20)
+# why 25bp gaps exactly? are there no shorter TRF blocks?
+trf_count <- trf %>% width %>% table %>% as.data.frame %>% head(25)
+names(trf_count) <- c("repeat_length", "count")
+png(file.path(fig_dir, "trf_lengths.png"), width = 1280, height = 800, res = 100)
+barplot(trf_count$count, names.arg = trf_count$repeat_length, border = NA,
+        main = "Distribution of lengths of TRF blocks",
+        xlab = "repeat length [bp]", ylab = "count")
+dev.off()
+
+# whole probe-covered regions overlapped by TRFs
+trf_intersect <- import.bed("output/trf_intersect.bed.gz")
+trf_intersect <- width(trf_intersect) %>% table %>% as.data.frame
+names(trf_intersect) <- c("intersect_length", "count")
+# => the overlap with TRFs ranges from 1 to 67 at max
+png(file.path(fig_dir, "trf_intersect.png"), width = 1280, height = 800, res = 100)
+barplot(trf_intersect$count, names.arg = trf_intersect$intersect_length, border = NA,
+        main = "Degree of overlap of 'flanking' regions with TRF",
+        xlab = "length of overlap with TRF region [bp]", ylab = "count")
+dev.off()
+
