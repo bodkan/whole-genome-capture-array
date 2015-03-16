@@ -14,7 +14,6 @@ scripts_dir := ./scripts
 DIRS := $(raw_data_dir) $(clean_data_dir) $(output_dir) $(figs_dir)
 
 summary_file = $(output_dir)/summary_$(tiling_step)bp_tiling.txt
-summary_fig = $(figs_dir)/summary_$(tiling_step)bp_tiling.png
 
 .PHONY: probes figures $(DIRS) clean 
 
@@ -37,7 +36,7 @@ probes: $(DIRS) $(clean_data_dir)/mappable_regions.bed.gz
 
 figures: $(DIRS) $(summary_file)
 	Rscript $(scripts_dir)/analyze_gaps.R
-	Rscript $(scripts_dir)/plot_probes_summary.R $(summary_file) $(summary_fig)
+	Rscript $(scripts_dir)/plot_probes_summary.R $(summary_file) $(tiling_step)
 
 $(summary_file):
 	printf "chr\tprobes\n" > $(summary_file)
