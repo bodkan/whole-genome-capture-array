@@ -29,10 +29,6 @@ probes: $(DIRS) $(clean_data_dir)/mappable_regions.bed.gz
 	sort -k1,1V -k2,2n $(output_dir)/whole_genome_$(tiling_step)bp_tiling.bed_tmp | \
 	    gzip > $(output_dir)/whole_genome_$(tiling_step)bp_tiling.bed.gz
 	rm $(output_dir)/whole_genome_$(tiling_step)bp_tiling.bed_tmp
-	for i in $(chromosomes); do \
-	    zgrep -w ^$${i} $(output_dir)/whole_genome_$(tiling_step)bp_tiling.bed.gz | \
-	    gzip > $(output_dir)/chr$${i}_$(tiling_step)bp_tiling.bed.gz; \
-	done
 
 figures: $(DIRS) $(summary_file)
 	Rscript $(scripts_dir)/analyze_gaps.R
@@ -45,7 +41,7 @@ $(summary_file):
 	    wc -l >> $(summary_file)
 	for i in $(chromosomes); do \
 	    printf "chr$${i}\t" >> $(summary_file); \
-	    zcat $(output_dir)/chr$${i}_$(tiling_step)bp_tiling.bed.gz | \
+	    zgrep -w ^$${i} $(output_dir)/whole_genome_$(tiling_step)bp_tiling.bed.gz | \
 	        wc -l >> $(summary_file); \
 	done
 
