@@ -25,9 +25,8 @@ fragments <- import.bed("output/merged.bed.gz")
 fragment_lengths <- width(fragments)
 
 png(paste0("figs/fragment_lengths_", tiling_step, "bp.png"), width = 1280, height = 800, res = 100)
-hist(fragment_lengths, col = "black", border = NA, breaks = 300,
+hist(fragment_lengths, col = "gray", border = NA, breaks = 300,
      main = "Size distribution of regions covered by probes", xlab = "length of a region [bp]")
 dev.off()
 
 quantile(fragment_lengths, seq(0.1, 1, 0.1))
-
