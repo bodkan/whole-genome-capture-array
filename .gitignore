@@ -2,6 +2,7 @@ raw_data/
 clean_data/
 output/
 figs/
+tmp/
 
 .RData
 .Rhistory

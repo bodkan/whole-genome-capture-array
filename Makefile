@@ -11,7 +11,8 @@ clean_data_dir := ./clean_data
 output_dir := ./output
 figs_dir := ./figs
 scripts_dir := ./scripts
-DIRS := $(raw_data_dir) $(clean_data_dir) $(output_dir) $(figs_dir)
+tmp_dir := ./tmp
+DIRS := $(raw_data_dir) $(clean_data_dir) $(output_dir) $(figs_dir) $(tmp_dir)
 
 summary_file = $(output_dir)/summary_$(tiling_step)bp_tiling.txt
 
