@@ -14,51 +14,65 @@ scripts_dir := ./scripts
 tmp_dir := ./tmp
 DIRS := $(raw_data_dir) $(clean_data_dir) $(output_dir) $(figs_dir) $(tmp_dir)
 
-summary_file = $(output_dir)/summary_$(tiling_step)bp_tiling.txt
+# data files produced by the probe-design scrip
+probe_coordinates := $(output_dir)/all_probes_$(tiling_step)bp_tiling.bed.gz
+unique_regions := $(clean_data_dir)/unique_regions.bed.gz
+probe_count := $(tmp_dir)/probe_count_$(tiling_step)bp_tiling.txt
+merged_probes := $(tmp_dir)/merged_probes_$(tiling_step)bp_tiling.bed.gz
+intersect_with_trf := $(tmp_dir)/intersect_with_trf_$(tiling_step)bp_tiling.bed.gz
 
-.PHONY: probes figures $(DIRS) clean 
+# two essential input files
+hengs_filter := $(raw_data_dir)/hs37m_filt35_99.bed.gz
+trf := $(raw_data_dir)/simpleRepeat.bed.gz
 
-all: probes figures 
+script := $(scripts_dir)/calc_probe_coords.py
 
-probes: $(DIRS) $(clean_data_dir)/mappable_regions.bed.gz
-	python3 $(scripts_dir)/calc_probe_coords.py \
-	    --in_file=$(clean_data_dir)/mappable_regions.bed.gz \
-	    --out_file=$(output_dir)/whole_genome_$(tiling_step)bp_tiling.bed_tmp \
+.PHONY: all probes figures clean
+
+all: probes figures
+
+probes: $(DIRS) $(probe_coordinates)
+
+figures: $(DIRS) $(probe_count) $(intersect_with_trf)
+	Rscript $(scripts_dir)/analyze_gaps.R
+	Rscript $(scripts_dir)/plot_probes_summary.R $(probe_count) $(tiling_step)
+
+$(probe_coordinates): $(unique_regions)
+	python3 $(script) \
+	    --in_file=$(unique_regions) \
+	    --out_file=$(probe_coordinates)_tmp \
 	    --probe_length=$(probe_length) \
 	    --tiling_step=$(tiling_step) \
 	    --flank_length=$(flank_length)
-	sort -k1,1V -k2,2n $(output_dir)/whole_genome_$(tiling_step)bp_tiling.bed_tmp | \
-	    gzip > $(output_dir)/whole_genome_$(tiling_step)bp_tiling.bed.gz
-	rm $(output_dir)/whole_genome_$(tiling_step)bp_tiling.bed_tmp
+	sort -k1,1V -k2,2n $(probe_coordinates)_tmp | gzip > $(probe_coordinates)
+	rm $(probe_coordinates)_tmp
 
-figures: $(DIRS) $(summary_file)
-	Rscript $(scripts_dir)/analyze_gaps.R
-	Rscript $(scripts_dir)/plot_probes_summary.R $(summary_file) $(tiling_step)
+$(intersect_with_trf): $(merged_probes)
+	bedtools intersect -a $(merged_probes) \
+	                   -b $(trf) | gzip > $(intersect_with_trf)
 
-$(summary_file):
-	printf "chr\tprobes\n" > $(summary_file)
-	printf "all\t" >> $(summary_file)
-	zcat $(output_dir)/whole_genome_$(tiling_step)bp_tiling.bed.gz | \
-	    wc -l >> $(summary_file)
+$(merged_probes):
+	bedtools merge -i $(probe_coordinates) | gzip > $@
+
+$(probe_count): $(probe_coordinates)
+	printf "chr\tprobes\nall\t" > $@
+	zcat $< | wc -l >> $@
 	for i in $(chromosomes); do \
-	    printf "chr$${i}\t" >> $(summary_file); \
-	    zgrep -w ^$${i} $(output_dir)/whole_genome_$(tiling_step)bp_tiling.bed.gz | \
-	        wc -l >> $(summary_file); \
+	    printf "chr$${i}\t" >> $@; \
+	    zgrep -w ^$${i} $< | wc -l >> $@; \
 	done
 
 # get coordinates of Heng's alignability regions that don't overlap TRF
-$(clean_data_dir)/mappable_regions.bed.gz: $(raw_data_dir)/hs37m_filt35_99.bed.gz \
-                                           $(raw_data_dir)/simpleRepeat.bed.gz
-	bedtools subtract -a $(raw_data_dir)/hs37m_filt35_99.bed.gz \
-	                  -b $(raw_data_dir)/simpleRepeat.bed.gz | gzip > $@
+$(unique_regions): $(hengs_filter) $(trf)
+	bedtools subtract -a $(hengs_filter) -b $(trf) | gzip > $@
 
 # create a local copy of Heng's alignability filter
-$(raw_data_dir)/hs37m_filt35_99.bed.gz:
+$(hengs_filter):
 	read -p "MPI login: " USERNAME; \
-	scp $${USERNAME}@bio23.eva.mpg.de:/mnt/454/HCNDCAM/Hengs_Alignability_Filter/hs37m_filt35_99.bed.gz $(raw_data_dir)
+	scp $${USERNAME}@bio23.eva.mpg.de:/mnt/454/HCNDCAM/Hengs_Alignability_Filter/hs37m_filt35_99.bed.gz $@
 
 # download tandem repeat filter from UCSC and extract only coordinate columns
-$(raw_data_dir)/simpleRepeat.bed.gz:
+$(trf):
 	curl http://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/simpleRepeat.txt.gz | \
 	gunzip | \
 	cut -f2,3,4 | \
@@ -72,8 +86,8 @@ $(clean_data_dir)/chrom_lengths.txt:
 	grep -w "chr[X,Y,0-9]*" | \
 	sort -k1,1V > $@
 
+$(DIRS):
+	mkdir $@
+
 clean:
 	rm -rf $(DIRS)
-
-$(DIRS):
-	mkdir -p $@

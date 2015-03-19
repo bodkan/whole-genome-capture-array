@@ -65,7 +65,7 @@ dev.off()
 ########################################################################
 # load regions that passed Heng Li's alignability filter and which have
 # not been found by a Tandem Repeat Finder
-no_trf_map_filter <- import.bed("clean_data/mappable_regions.bed.gz")
+no_trf_map_filter <- import.bed("clean_data/unique_regions.bed.gz")
 
 # split the loaded GRanges object into GRangesList -- regions per chromosomes
 seqlevels(no_trf_map_filter, force = TRUE) <- chromosomes
@@ -143,7 +143,7 @@ barplot(trf_count$count, names.arg = trf_count$repeat_length, border = NA,
 dev.off()
 
 # whole probe-covered regions overlapped by TRFs
-trf_intersect <- import.bed("output/trf_intersect.bed.gz")
+trf_intersect <- import.bed("tmp/intersect_with_trf_10bp_tiling.bed.gz")
 trf_intersect <- width(trf_intersect) %>% table %>% as.data.frame
 names(trf_intersect) <- c("intersect_length", "count")
 # => the overlap with TRFs ranges from 1 to 67 at max

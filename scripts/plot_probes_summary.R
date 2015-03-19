@@ -21,7 +21,7 @@ dev.off()
 
 # distribution of lengths of covered regions
 #bedtools merge -i whole_genome_10bp_tiling.bed.gz | gzip > merged.bed.gz
-fragments <- import.bed("output/merged.bed.gz")
+fragments <- import.bed(paste0("tmp/merged_probes_", tiling_step, "bp_tiling.bed.gz"))
 fragment_lengths <- width(fragments)
 
 png(paste0("figs/fragment_lengths_", tiling_step, "bp.png"), width = 1280, height = 800, res = 100)
