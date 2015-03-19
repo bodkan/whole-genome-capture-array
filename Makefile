@@ -34,8 +34,7 @@ all: probes figures
 probes: $(DIRS) $(probe_coordinates)
 
 figures: $(DIRS) $(probe_count) $(intersect_with_trf)
-	Rscript $(scripts_dir)/analyze_gaps.R
-	Rscript $(scripts_dir)/plot_probes_summary.R $(probe_count) $(tiling_step)
+	Rscript $(scripts_dir)/generate_figures.R $(tiling_step)
 
 $(probe_coordinates): $(unique_regions)
 	python3 $(script) \
