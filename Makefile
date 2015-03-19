@@ -75,7 +75,9 @@ $(trf):
 	curl http://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/simpleRepeat.txt.gz | \
 	gunzip | \
 	cut -f2,3,4 | \
-	sed 's/^chr//' | gzip > $@
+	sed 's/^chr//' > $@_tmp
+	bedtools merge -i $@_tmp | gzip > $@
+	rm $@_tmp
 
 # download table of chromosome lengths from UCSC
 $(clean_data_dir)/chrom_lengths.txt:
