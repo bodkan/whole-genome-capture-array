@@ -15,7 +15,8 @@ tmp_dir := ./tmp
 DIRS := $(raw_data_dir) $(clean_data_dir) $(output_dir) $(figs_dir) $(tmp_dir)
 
 # data files produced by the probe-design scrip
-probe_coordinates := $(output_dir)/all_probes_$(tiling_step)bp_tiling.bed.gz
+probe_coords_no_trf := $(output_dir)/probes_$(tiling_step)bp_tiling_no_trf.bed.gz
+probe_coords_all := $(tmp_dir)/probes_$(tiling_step)bp_tiling_all.bed.gz
 unique_regions := $(clean_data_dir)/unique_regions.bed.gz
 probe_count := $(tmp_dir)/probe_count_$(tiling_step)bp_tiling.txt
 merged_probes := $(tmp_dir)/merged_probes_$(tiling_step)bp_tiling.bed.gz
@@ -31,29 +32,31 @@ script := $(scripts_dir)/calc_probe_coords.py
 
 all: probes figures
 
-probes: $(DIRS) $(probe_coordinates)
+probes: $(DIRS) $(probe_coords_no_trf)
 
 figures: $(DIRS) $(probe_count) $(intersect_with_trf)
 	Rscript $(scripts_dir)/generate_figures.R $(tiling_step)
 
-$(probe_coordinates): $(unique_regions)
+$(probe_coords_no_trf): $(unique_regions)
 	python3 $(script) \
 	    --in_file=$(unique_regions) \
-	    --out_file=$(probe_coordinates)_tmp \
+	    --out_file=$(probe_coords_all)_tmp \
 	    --probe_length=$(probe_length) \
 	    --tiling_step=$(tiling_step) \
 	    --flank_length=$(flank_length)
-	sort -k1,1V -k2,2n $(probe_coordinates)_tmp | gzip > $(probe_coordinates)
-	rm $(probe_coordinates)_tmp
+	sort -k1,1V -k2,2n $(probe_coords_all)_tmp | gzip > $(probe_coords_all)
+	bedtools intersect -a $(probe_coords_all) -b $(trf) -c | \
+	    awk -v OFS='\t' '($$4 == 0) {print $$1, $$2, $$3}' | gzip > $@
+	rm $(probe_coords_all)_tmp
 
 $(intersect_with_trf): $(merged_probes)
 	bedtools intersect -a $(merged_probes) \
 	                   -b $(trf) | gzip > $(intersect_with_trf)
 
 $(merged_probes):
-	bedtools merge -i $(probe_coordinates) | gzip > $@
+	bedtools merge -i $(probe_coords_all) | gzip > $@
 
-$(probe_count): $(probe_coordinates)
+$(probe_count): $(probe_coords_all)
 	printf "chr\tprobes\nall\t" > $@
 	zcat $< | wc -l >> $@
 	for i in $(chromosomes); do \
