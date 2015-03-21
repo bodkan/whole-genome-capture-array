@@ -177,7 +177,7 @@ barplot(trf_count$count, names.arg = trf_count$repeat_length, border = NA,
 dev.off()
 
 # whole probe-covered regions overlapped by TRFs
-trf_intersect <- import.bed("tmp/intersect_with_trf_10bp_tiling.bed.gz")
+trf_intersect <- import.bed(paste0("tmp/intersect_with_trf_", tiling_step, "bp_tiling.bed.gz"))
 trf_intersect <- width(trf_intersect) %>% table %>% as.data.frame
 names(trf_intersect) <- c("intersect_length", "count")
 # => the overlap with TRFs ranges from 1 to 67 at max
