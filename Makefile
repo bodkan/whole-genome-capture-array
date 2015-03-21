@@ -58,10 +58,10 @@ $(intersect_with_trf): $(merged_probes)
 	bedtools intersect -a $(merged_probes) \
 	                   -b $(trf) | gzip > $(intersect_with_trf)
 
-$(merged_probes): $(probe_coords_unfiltered)
-	bedtools merge -i $(probe_coords_unfiltered) | gzip > $@
+$(merged_probes): $(final_probe_coords)
+	bedtools merge -i $< | gzip > $@
 
-$(probe_count): $(probe_coords_unfiltered)
+$(probe_count): $(final_probe_coords)
 	printf "chr\tprobes\nall\t" > $@
 	zcat $< | wc -l >> $@
 	for i in $(chromosomes); do \
