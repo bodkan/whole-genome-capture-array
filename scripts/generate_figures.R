@@ -26,7 +26,7 @@ dev.off()
 
 # plot distribution of lengths of covered regions
 #quantile(fragment_lengths, seq(0.1, 1, 0.1))
-fragments <- import.bed(paste0("tmp/merged_probes_", tiling_step, "bp_tiling.bed.gz"))
+fragments <- import.bed(paste0("tmp/merged_final_probes_", tiling_step, "bp_tiling.bed.gz"))
 fragment_lengths <- width(fragments)
 
 png(paste0("figs/fragment_lengths_", tiling_step, "bp.png"), width = 1280, height = 800, res = 100)

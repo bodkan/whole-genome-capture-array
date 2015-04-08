@@ -21,7 +21,8 @@ probe_coords_unfiltered := $(tmp_dir)/probes_$(tiling_step)bp_tiling_unfiltered.
 unique_regions := $(clean_data_dir)/unique_regions.bed.gz
 unique_1bp := $(clean_data_dir)/unique_1bp.bed.gz
 probe_count := $(tmp_dir)/probe_count_$(tiling_step)bp_tiling.txt
-merged_probes := $(tmp_dir)/merged_probes_$(tiling_step)bp_tiling.bed.gz
+merged_final_probes := $(tmp_dir)/merged_final_probes_$(tiling_step)bp_tiling.bed.gz
+merged_unfiltered_probes := $(tmp_dir)/merged_unfiltered_probes_$(tiling_step)bp_tiling.bed.gz
 intersect_with_trf := $(tmp_dir)/intersect_with_trf_$(tiling_step)bp_tiling.bed.gz
 
 # input files
@@ -37,7 +38,7 @@ all: probes figures
 
 probes: $(DIRS) $(final_probe_seqs)
 
-figures: $(DIRS) $(probe_count) $(intersect_with_trf)
+figures: $(DIRS) $(probe_count) $(merged_final_probes) $(intersect_with_trf)
 	Rscript $(scripts_dir)/generate_figures.R $(tiling_step)
 
 $(final_probe_seqs): $(final_probe_coords)
@@ -61,11 +62,14 @@ $(probe_coords_unfiltered): $(unique_regions)
 	sort -k1,1V -k2,2n $@_tmp | gzip > $@
 	rm $@_tmp
 
-$(intersect_with_trf): $(merged_probes)
-	bedtools intersect -a $(merged_probes) \
+$(intersect_with_trf): $(merged_unfiltered_probes)
+	bedtools intersect -a $(merged_unfiltered_probes) \
 	                   -b $(trf) | gzip > $(intersect_with_trf)
 
-$(merged_probes): $(final_probe_coords)
+$(merged_final_probes): $(final_probe_coords)
+	bedtools merge -i $< | gzip > $@
+
+$(merged_unfiltered_probes): $(probe_coords_unfiltered)
 	bedtools merge -i $< | gzip > $@
 
 $(probe_count): $(final_probe_coords)
