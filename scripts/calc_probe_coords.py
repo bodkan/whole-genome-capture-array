@@ -19,7 +19,7 @@ def tile_probes(start, end, probe_length, tiling_step, flank_length):
 
     probes = []
 
-    while (probe_end - end) < flank_length:
+    while (probe_end - end) <= flank_length:
         probes.append((probe_start, probe_end))
 
         probe_start = probe_start + tiling_step
