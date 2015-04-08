@@ -16,6 +16,7 @@ DIRS := $(raw_data_dir) $(clean_data_dir) $(output_dir) $(figs_dir) $(tmp_dir)
 
 # data files produced by the probe-design scrip
 final_probe_coords := $(output_dir)/final_probes_$(tiling_step)bp_tiling.bed.gz
+final_probe_seqs := $(output_dir)/final_probes_seqs_$(tiling_step)bp_tiling.txt.gz
 probe_coords_unfiltered := $(tmp_dir)/probes_$(tiling_step)bp_tiling_unfiltered.bed.gz
 unique_regions := $(clean_data_dir)/unique_regions.bed.gz
 unique_1bp := $(clean_data_dir)/unique_1bp.bed.gz
@@ -23,7 +24,8 @@ probe_count := $(tmp_dir)/probe_count_$(tiling_step)bp_tiling.txt
 merged_probes := $(tmp_dir)/merged_probes_$(tiling_step)bp_tiling.bed.gz
 intersect_with_trf := $(tmp_dir)/intersect_with_trf_$(tiling_step)bp_tiling.bed.gz
 
-# two essential input files
+# input files
+ref_genome := /mnt/solexa/Genomes/hg19_evan/whole_genome.fa
 hengs_filter := $(raw_data_dir)/hs37m_filt35_99.bed.gz
 trf := $(raw_data_dir)/simpleRepeat.bed.gz
 
@@ -33,10 +35,15 @@ script := $(scripts_dir)/calc_probe_coords.py
 
 all: probes figures
 
-probes: $(DIRS) $(final_probe_coords)
+probes: $(DIRS) $(final_probe_seqs)
 
 figures: $(DIRS) $(probe_count) $(intersect_with_trf)
 	Rscript $(scripts_dir)/generate_figures.R $(tiling_step)
+
+$(final_probe_seqs): $(final_probe_coords)
+	bedtools getfasta -fi $(ref_genome) -bed $(final_probe_coords) -fo $@_withNs -tab
+	gzip $@_withNs
+	zgrep -v "N" $@_withNs | sed 's/$$/CACTGCGG/' | gzip > $@
 
 $(final_probe_coords): $(probe_coords_unfiltered) $(trf) $(unique_1bp)
 	bedtools intersect -a $(probe_coords_unfiltered) -b $(trf) -c | \
