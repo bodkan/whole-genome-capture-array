@@ -15,7 +15,7 @@ tmp_dir := ./tmp
 DIRS := $(raw_data_dir) $(clean_data_dir) $(output_dir) $(figs_dir) $(tmp_dir)
 
 # data files produced by the probe-design scrip
-final_probe_coords := $(output_dir)/final_probes_$(tiling_step)bp_tiling.bed.gz
+final_probe_coords := $(tmp_dir)/final_probes_$(tiling_step)bp_tiling.bed.gz
 final_probe_seqs := $(output_dir)/final_probes_seqs_$(tiling_step)bp_tiling.txt.gz
 probe_coords_unfiltered := $(tmp_dir)/probes_$(tiling_step)bp_tiling_unfiltered.bed.gz
 unique_regions := $(clean_data_dir)/unique_regions.bed.gz
@@ -42,8 +42,8 @@ figures: $(DIRS) $(probe_count) $(merged_final_probes) $(intersect_with_trf)
 
 $(final_probe_seqs): $(final_probe_coords)
 	bedtools getfasta -fi $(ref_genome) -bed $(final_probe_coords) -fo $@_withNs -tab
-	gzip $@_withNs
-	zgrep -v "N" $@_withNs | sed 's/$$/CACTGCGG/' | gzip > $@
+	grep -v "N" $@_withNs | sed 's/$$/CACTGCGG/' | gzip > $@
+	rm $@_withNs
 
 $(final_probe_coords): $(probe_coords_unfiltered) $(trf)
 	bedtools intersect -a $(probe_coords_unfiltered) -b $(trf) -c | \
