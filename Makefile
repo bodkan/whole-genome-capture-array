@@ -19,7 +19,6 @@ final_probe_coords := $(output_dir)/final_probes_$(tiling_step)bp_tiling.bed.gz
 final_probe_seqs := $(output_dir)/final_probes_seqs_$(tiling_step)bp_tiling.txt.gz
 probe_coords_unfiltered := $(tmp_dir)/probes_$(tiling_step)bp_tiling_unfiltered.bed.gz
 unique_regions := $(clean_data_dir)/unique_regions.bed.gz
-unique_1bp := $(clean_data_dir)/unique_1bp.bed.gz
 probe_count := $(tmp_dir)/probe_count_$(tiling_step)bp_tiling.txt
 merged_final_probes := $(tmp_dir)/merged_final_probes_$(tiling_step)bp_tiling.bed.gz
 merged_unfiltered_probes := $(tmp_dir)/merged_unfiltered_probes_$(tiling_step)bp_tiling.bed.gz
@@ -46,11 +45,9 @@ $(final_probe_seqs): $(final_probe_coords)
 	gzip $@_withNs
 	zgrep -v "N" $@_withNs | sed 's/$$/CACTGCGG/' | gzip > $@
 
-$(final_probe_coords): $(probe_coords_unfiltered) $(trf) $(unique_1bp)
+$(final_probe_coords): $(probe_coords_unfiltered) $(trf)
 	bedtools intersect -a $(probe_coords_unfiltered) -b $(trf) -c | \
-	    awk '($$4 == 0)' | cut -f1,2,3 | gzip > $@_notrf
-	bedtools intersect -a $@_notrf -b $(unique_1bp) -v | gzip > $@
-	rm $@_notrf
+	    awk '($$4 == 0)' | cut -f1,2,3 | gzip > $@
 
 $(probe_coords_unfiltered): $(unique_regions)
 	python3 $(script) \
@@ -79,9 +76,6 @@ $(probe_count): $(final_probe_coords)
 	    printf "chr$${i}\t" >> $@; \
 	    zgrep -w ^$${i} $< | wc -l >> $@; \
 	done
-
-$(unique_1bp): $(unique_regions)
-	zcat $< | awk '($$3 - $$2) == 1' | gzip > $@
 
 # get coordinates of Heng's alignability regions that don't overlap TRF
 $(unique_regions): $(hengs_filter) $(trf)
