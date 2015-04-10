@@ -41,7 +41,7 @@ figures: $(DIRS) $(probe_count) $(merged_final_probes) $(intersect_with_trf)
 	Rscript $(scripts_dir)/generate_figures.R $(tiling_step)
 
 $(final_probe_seqs): $(final_probe_coords)
-	bedtools getfasta -fi $(ref_genome) -bed $(final_probe_coords) -fo $@_withNs -tab
+	bedtools getfasta -fi $(ref_genome) -bed $< -fo $@_withNs -tab
 	grep -v "N" $@_withNs | sed 's/$$/CACTGCGG/' | gzip > $@
 	rm $@_withNs
 
@@ -51,7 +51,7 @@ $(final_probe_coords): $(probe_coords_unfiltered) $(trf)
 
 $(probe_coords_unfiltered): $(unique_regions)
 	python3 $(script) \
-	    --in_file=$(unique_regions) \
+	    --in_file=$< \
 	    --out_file=$@_tmp \
 	    --probe_length=$(probe_length) \
 	    --tiling_step=$(tiling_step) \
@@ -60,8 +60,7 @@ $(probe_coords_unfiltered): $(unique_regions)
 	rm $@_tmp
 
 $(intersect_with_trf): $(merged_unfiltered_probes)
-	bedtools intersect -a $(merged_unfiltered_probes) \
-	                   -b $(trf) | gzip > $(intersect_with_trf)
+	bedtools intersect -a $< -b $(trf) | gzip > $@
 
 $(merged_final_probes): $(final_probe_coords)
 	bedtools merge -i $< | gzip > $@
