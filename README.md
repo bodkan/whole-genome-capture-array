@@ -1,4 +1,4 @@
-# whole-genome-capture-array
+# Whole genome capture array design pipeline
 
 This repository contains a pipeline for generating DNA capture probes for capturing
 _whole_ chromosomes of human sequences from ancient DNA samples with high rates of
